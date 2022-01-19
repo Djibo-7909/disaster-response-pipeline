@@ -1,5 +1,6 @@
 import json
 import plotly
+import plotly.express as px
 import pandas as pd
 
 from nltk.stem import WordNetLemmatizer
@@ -43,29 +44,41 @@ print('done');
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
-    genre_counts = df.groupby('genre').count()['message']
-    genre_names = list(genre_counts.index)
+    # Filter dataframe to keep related messages
+    # Group by direct_report, request and offer, and count the categories
+    df_group=df[(df.related==1)].groupby(['direct_report','request','offer']).sum()
     
+    # reset the index of the dataframe
+    df_group.reset_index(inplace=True)
+
+    # Filter to keep only the messages classified as "requests",
+    # The result is a dataframe with 2 lines, one for direct reports, the other for indirect reports
+    # Then, this dataframe is transposed to have columns
+    df_group_transpose=df_group[(df_group.request==1)].loc[:, 'aid_related':'other_weather'].transpose()
+
+    # Rename the columns
+    df_group_transpose.rename(columns={2: "indirect_report", 5: "direct_report"},inplace=True)
+    df_group_transpose.reset_index(inplace=True)
+
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
-                Bar(
-                    x=genre_names,
-                    y=genre_counts
-                )
+                px.treemap(df_group_transpose, path=[px.Constant("indirect_report"), 'index'], values='indirect_report',color='index').data[0]
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
-                'yaxis': {
-                    'title': "Count"
-                },
-                'xaxis': {
-                    'title': "Genre"
-                }
+                'title': 'Distribution of categories for indirect requests (related messages only)',
+            }
+        },
+        {
+            'data': [
+                px.treemap(df_group_transpose, path=[px.Constant("direct_report"), 'index'], values='direct_report',color='index').data[0]
+            ],
+
+            'layout': {
+                'title': 'Distribution of categories for direct requests (related messages only)',
             }
         }
     ]
