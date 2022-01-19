@@ -18,6 +18,7 @@ import sklearn
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+from sklearn.metrics import precision_recall_fscore_support as score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -81,14 +82,23 @@ def build_model():
 
     return pipeline
 
-def evaluate_model(model, X_test, Y_test, category_names):
+def evaluate_model(model, X_test, Y_test, category_names,database_filepath):
     #predict model
     Y_pred= model.predict(X_test)
-    
-    #print scores
+
+    #save scores in arrays
+    precisions = np.array([])
+    recalls = np.array([])
+    fscores = np.array([])
     for i in range(Y_test.shape[1]):
-        print(category_names[i])
-        print(classification_report(Y_test[:, i],Y_pred[:, i]))
+        precision,recall,fscore,support=score(Y_test[:, i],Y_pred[:, i],average='weighted')
+        precisions=np.append(precisions,precision)
+        recalls=np.append(recalls,recall)
+        fscores=np.append(fscores,fscore)    
+    #create dataframe of scores and save is as a table in the DisasterResponse database
+    df_score = pd.DataFrame({'category':np.array(category_names),'precisions':precisions,'recalls':recalls,'fscores':fscores})
+    engine = create_engine('sqlite:///'+database_filepath)
+    df_score.to_sql('ScoreTable', engine, index=False, if_exists='replace')
 
 def save_model(model, model_filepath):
     with open(model_filepath, 'wb') as f:
@@ -109,7 +119,7 @@ def main():
         model.fit(X_train, Y_train)
         
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        evaluate_model(model, X_test, Y_test, category_names,database_filepath)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
         save_model(model, model_filepath)
