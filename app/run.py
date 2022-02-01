@@ -61,7 +61,6 @@ def index():
     df_group_transpose.reset_index(inplace=True)
 
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -72,6 +71,15 @@ def index():
                 'title': 'Distribution of categories for indirect requests (related messages only)',
             }
         },
+        {
+            'data': [
+                px.treemap(df_group_transpose, path=[px.Constant("direct_report"), 'index'], values='direct_report',color='index').data[0]
+            ],
+
+            'layout': {
+                'title': 'Distribution of categories for direct requests (related messages only)',
+            }
+        }
         {
             'data': [
                 px.treemap(df_group_transpose, path=[px.Constant("direct_report"), 'index'], values='direct_report',color='index').data[0]
