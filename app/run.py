@@ -27,10 +27,14 @@ def tokenize(text):
 
     return clean_tokens
 
-# load data
+# load data for display
 print('load database...');
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('DisasterData', engine)
+#load score data
+df_score = pd.read_sql_table('ScoreTable', 'sqlite:///../data/DisasterResponse.db')
+#Modify score dataframe to make it tidy
+df_score=pd.melt(df_score, id_vars=['category'], value_vars=['precisions', 'recalls','fscores'],var_name='score', value_name='value')
 print('done');
 
 # load model
@@ -79,14 +83,19 @@ def index():
             'layout': {
                 'title': 'Distribution of categories for direct requests (related messages only)',
             }
-        }
+        },
         {
             'data': [
-                px.treemap(df_group_transpose, path=[px.Constant("direct_report"), 'index'], values='direct_report',color='index').data[0]
+                px.bar(df_score, x="value", y="category",barmode='group', color='score').data[0],
+                px.bar(df_score, x="value", y="category",barmode='group', color='score').data[1],
+                px.bar(df_score, x="value", y="category",barmode='group', color='score').data[2]
             ],
 
             'layout': {
-                'title': 'Distribution of categories for direct requests (related messages only)',
+                'title': 'Model score',
+                'height': 1200,
+                'margin': {'l':150, 'r':0},
+                
             }
         }
     ]
