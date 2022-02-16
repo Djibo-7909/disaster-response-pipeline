@@ -41,6 +41,9 @@ def clean_data(df):
         
      # drop duplicates
     df.drop_duplicates(inplace=True)
+
+    #drop lines with related column = 2 (lines with no classification)
+    df =df[df.related!=2]
     
     return df
     
