@@ -28,6 +28,15 @@ from sklearn.multioutput import MultiOutputClassifier
 nltk.download('averaged_perceptron_tagger')
 
 def load_data(database_filepath):
+    """Load data from the sqlite database
+    Args:
+    database_filepath: path to sqlite database containing cleaned messages and categories. 
+
+    Returns:
+    X: messages.
+    Y: classification in categories.
+    category_names: list of all caterogies.
+    """
     # load data from database
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('DisasterData', 'sqlite:///'+database_filepath) 
@@ -37,17 +46,32 @@ def load_data(database_filepath):
     return X,Y,category_names
 
 def tokenize(text):
+    """Function which tokenizes a given text:
+
+    Args:
+    text: disaster message to be tokenized. 
+
+    Returns:
+    clean_tokens_filtered: list of words filtered from message tokenization.
+    """
+
     stop_words = stopwords.words("english")# Define stop words 
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())# Normalize text   
     tokens = word_tokenize(text) # Tokenize
     lemmatizer = WordNetLemmatizer()
     
     # lemmatize and remove stop words
-    clean_tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
-    clean_tokens_filtered = [wt for (wt, tag) in pos_tag(clean_tokens) if tag in ['VB','VBP','VBG','VBZ','NN','NNS']]
+    clean_tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words] # lemmatize words and remove stop words
+    clean_tokens_filtered = [wt for (wt, tag) in pos_tag(clean_tokens) if tag in ['VB','VBP','VBG','VBZ','NN','NNS']] # keep verbs and nouns
     return clean_tokens_filtered
 
 def build_model():
+    """Machine learning pipeline:
+
+    Returns:
+    pipeline: list of words filtered from message tokenization.
+    """
+
     #build machine learning pipeline
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -83,6 +107,16 @@ def build_model():
     return pipeline
 
 def evaluate_model(model, X_test, Y_test, category_names,database_filepath):
+    """ Evaluate machine learning model and store precision scores in the disaster messages database.
+
+    Args:
+    model: machine learning model.
+    X_test: subset of messages for test.
+    Y_test: subset of classification of messages in X_test.
+    category_names: list of categories.
+    database_filepath: path to disaster messages database.
+
+    """
     #predict model
     Y_pred= model.predict(X_test)
 
@@ -101,11 +135,25 @@ def evaluate_model(model, X_test, Y_test, category_names,database_filepath):
     df_score.to_sql('ScoreTable', engine, index=False, if_exists='replace')
 
 def save_model(model, model_filepath):
+    """ Save machine learning model into pickle file.
+
+    Args:
+    model: machine learning model.
+    model_filepath: path to pickle file.
+
+    """
     with open(model_filepath, 'wb') as f:
         pickle.dump(model, f)
 
 
 def main():
+    """ Machine learning pipeline:
+    1. Load data from disaster message database
+    2. extract data from database and create training and test subsets
+    3. Build and train machine learning model
+    4. Evaluate model and store precision scores in the disaster message database
+    5. Store the model into a pickle file.
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
