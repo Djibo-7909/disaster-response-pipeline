@@ -5,6 +5,16 @@ import sqlalchemy
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """Load data from input csv files into a panda dataframe.
+
+    Args:
+    messages_filepath: path to csv file containing all disaster messages.
+    categories_filepath: path to csv file containing classification of disaster messages into categories.
+
+    Returns:
+    Dataframe containing the merge of messages and classification.
+    """
+
     # load messages and categories dataset
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
@@ -14,6 +24,16 @@ def load_data(messages_filepath, categories_filepath):
     return df
 
 def clean_data(df):
+    """Clean the input dataframe of disaster messages and categories
+
+    Args:
+    df: panda dataframe containing messages and categories.
+
+    Returns:
+    Dataframe of messages merged with classification into categories.
+    Each category is in a specific column containing either 0 or 1.
+    The  dataframe is cleaned from duplicates and messages without any category.
+    """
     # create a dataframe of the 36 individual category columns
     categories = df.categories.str.split(pat=';',expand=True)
     
@@ -48,11 +68,22 @@ def clean_data(df):
     return df
     
 def save_data(df, database_filename):
+    """Save the panda dataframe into a sqlite database
+
+    Args:
+    df: panda dataframe containing cleaned messages and categories.
+    """
     engine = create_engine('sqlite:///'+database_filename)
     df.to_sql('DisasterData', engine, index=False, if_exists='replace')  
 
 
 def main():
+    """
+    ETL of disaster message and associated categories:
+    1. Load csv data into panda dataframe.
+    2. Transform and clean dataframe.
+    3. Save dataframe into sqlite database.
+    """
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]
