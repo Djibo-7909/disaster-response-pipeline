@@ -44,10 +44,16 @@ The **`data`** directory contains the dataset which will help build the machine 
 4. `DisasterResponse.db` : output of the above-mentioned ETL script.
 
 ### `models` directory
-The **`models`** folder contains the `train_classifier.py` script which: 
+The **`models`** directory contains the `train_classifier.py` script which: 
 1. Loads data from the SQLite database (`DisasterResponse.db`).
 2. Splits the dataset into training and test sets.
 3. Builds a text processing and machine learning pipeline.
 4. Trains and tunes a model using GridSearchCV.
 5. Outputs results on the test set.
 6. Exports the final model as a pickle file (`classifier.pkl`).
+
+### `app`directory
+The **`app`** directory contains the necessary files to run the flask web app:
+
+1. The subdirectory **`templates`** contains the html code.
+2. The **`run.py`** script launches the flask web app which will launch the machine learning model when a message is submitted.  
