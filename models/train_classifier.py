@@ -120,6 +120,12 @@ def evaluate_model(model, X_test, Y_test, category_names,database_filepath):
     #predict model
     Y_pred= model.predict(X_test)
 
+    #print scores
+    print('Printing classification report for each category...')
+    for i in range(Y_test.shape[1]):
+        print('Category: '+category_names[i])
+        print(classification_report(Y_test[:, i],Y_pred[:, i]))
+
     #save scores in arrays
     precisions = np.array([])
     recalls = np.array([])
