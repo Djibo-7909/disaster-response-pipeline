@@ -65,7 +65,7 @@ def tokenize(text):
     clean_tokens_filtered = [wt for (wt, tag) in pos_tag(clean_tokens) if tag in ['VB','VBP','VBG','VBZ','NN','NNS']] # keep verbs and nouns
     return clean_tokens_filtered
 
-def build_model():
+def build_model(X_train, Y_train):
     """Machine learning pipeline:
 
     Returns:
@@ -79,30 +79,23 @@ def build_model():
         ('classifier' , MultiOutputClassifier(RandomForestClassifier(), n_jobs=-1)),
     ])
     
-    #The following code was ran once in the jupyter notebook to determine the best parameters
-        #X_train, X_test, Y_train, Y_test = train_test_split(X, Y)
-        #parameters ={
-        #    'vect__ngram_range': ((1, 1), (1, 2)),
-        #    'vect__max_df': (0.5, 0.75, 1.0),
-        #    'vect__max_features': (None, 5000, 10000),
-        #    'tfidf__use_idf': (True, False),
-        #    'classifier__estimator__n_estimators': [50, 100, 200],
-        #    'classifier__estimator__min_samples_split': [2, 3, 4],
-        #}
-        #cv = GridSearchCV(pipeline, param_grid=parameters)
-        #cv.fit(X_train , Y_train)
-    #outcome of the grid search gives following parameters;
-    #However, the n_estimators parameter which applies to the random forest classifier has been reduced 
-    #to limit the size of the pickle file.
-    best_parameters={'classifier__estimator__min_samples_split':2,
-                'classifier__estimator__n_estimators':10,
-                'tfidf__use_idf': True,
-                'vect__max_df': 1.0,
-                'vect__max_features': 5000,
-                'vect__ngram_range': (1,2)}
-    
+    #Use gridsearchCV to find best parameters for the model
+    #NB: range of parameters reduced to limit the computation time and limit the size of the pickle file.
+    print(' opimizing ml model (gridsearchCV)...');
+    parameters ={
+        'vect__ngram_range': ((1, 1), (1, 2)),
+        'vect__max_df': (0.75, 1.0),
+        'vect__max_features': (None, 5000),
+        'tfidf__use_idf': (True, False),
+        'classifier__estimator__n_estimators': [5,10],
+        'classifier__estimator__min_samples_split': [2, 3],
+    }
+    cv = GridSearchCV(pipeline, param_grid=parameters)
+    cv.fit(X_train , Y_train)
+    # print best parameters
+    print(' output of GridSearchCV gives parameters: '+ str(cv.best_params_))  
     #apply best parameters to pipeline.
-    pipeline.set_params(**best_parameters)
+    pipeline.set_params(**cv.best_params_)
 
     return pipeline
 
@@ -167,7 +160,7 @@ def main():
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
         
         print('Building model...')
-        model = build_model()
+        model = build_model(X_train, Y_train)
         
         print('Training model...')
         model.fit(X_train, Y_train)
