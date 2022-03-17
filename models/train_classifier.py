@@ -67,9 +67,11 @@ def tokenize(text):
 
 def build_model(X_train, Y_train):
     """Machine learning pipeline:
-
+    Args:
+        X_train: subset of messages for train.
+        Y_train: subset of classification of messages in X_train.
     Returns:
-    pipeline: list of words filtered from message tokenization.
+    pipeline: machine learning pipeline.
     """
 
     #build machine learning pipeline
